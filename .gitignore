@@ -1,0 +1,28 @@
+# dbt generated files
+**/target/
+**/dbt_packages/
+**/logs/
+
+# Python
+__pycache__/
+.venv/
+venv/
+
+# Credentials
+profiles.yml
+**/profiles.yml
+.env
+.env.*
+*.pem
+*.key
+.aws/
+
+# Other
+*.log
+.DS_Store
+Thumbs.db
+
+# Large raw datasets
+*.csv
+*.parquet
+
