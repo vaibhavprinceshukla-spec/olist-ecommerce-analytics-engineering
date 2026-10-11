@@ -1,0 +1,266 @@
+version: 2
+
+models:
+
+  # ==========================================
+  # PRODUCT ENRICHED
+  # ==========================================
+
+  - name: int_product_enriched
+
+    description: >
+      Enriched product model combining product information
+      with English product category translations.
+
+    columns:
+
+      - name: product_id
+        description: "Unique identifier for the product."
+        tests:
+          - not_null
+          - unique
+
+      - name: product_category_name
+        description: "Original Portuguese product category."
+
+      - name: product_category_name_english
+        description: "English translation of the product category."
+
+      - name: product_weight_g
+        description: "Product weight in grams."
+
+      - name: product_length_cm
+        description: "Product length in centimeters."
+
+      - name: product_height_cm
+        description: "Product height in centimeters."
+
+      - name: product_width_cm
+        description: "Product width in centimeters."
+
+
+  # ==========================================
+  # CUSTOMER LOCATION
+  # ==========================================
+
+  - name: int_customer_location
+
+    description: >
+      Customer-level geographic model combining customer information
+      with aggregated geolocation coordinates.
+
+    columns:
+
+      - name: customer_id
+        description: "Unique identifier for the customer order record."
+        tests:
+          - not_null
+          - unique
+
+      - name: customer_unique_id
+        description: "Unique identifier for the actual customer."
+
+      - name: customer_zip_code_prefix
+        description: "Customer ZIP code prefix."
+
+      - name: customer_city
+        description: "Customer city."
+
+      - name: customer_state
+        description: "Customer state."
+
+      - name: latitude
+        description: "Average latitude associated with the customer ZIP code."
+
+      - name: longitude
+        description: "Average longitude associated with the customer ZIP code."
+
+
+  # ==========================================
+  # ORDER ITEMS ENRICHED
+  # ==========================================
+
+  - name: int_order_items_enriched
+
+    description: >
+      Enriched order-item model combining order items with product
+      and seller information. Grain is one row per order item.
+
+    columns:
+
+      - name: order_id
+        description: "Unique identifier for the order."
+        tests:
+          - not_null
+
+      - name: order_item_id
+        description: "Sequential item number within the order."
+        tests:
+          - not_null
+
+      - name: product_id
+        description: "Product associated with the order item."
+        tests:
+          - not_null
+          - relationships:
+              to: ref('int_product_enriched')
+              field: product_id
+
+      - name: seller_id
+        description: "Seller associated with the order item."
+        tests:
+          - not_null
+          - relationships:
+              to: ref('stg_sellers')
+              field: seller_id
+
+      - name: price
+        description: "Price of the product."
+
+      - name: freight_value
+        description: "Freight value for the order item."
+
+      - name: product_category_name
+        description: "Original product category."
+
+      - name: product_category_name_english
+        description: "English product category."
+
+      - name: seller_city
+        description: "Seller city."
+
+      - name: seller_state
+        description: "Seller state."
+
+
+  # ==========================================
+  # ORDERS ENRICHED
+  # ==========================================
+
+  - name: int_orders_enriched
+
+    description: >
+      Order-level intermediate model combining orders with
+      aggregated order items, payments, and reviews.
+      Grain is one row per order.
+
+    columns:
+
+      - name: order_id
+        description: "Unique identifier for the order."
+        tests:
+          - not_null
+          - unique
+
+      - name: customer_id
+        description: "Customer who placed the order."
+        tests:
+          - not_null
+          - relationships:
+              to: ref('stg_customers')
+              field: customer_id
+
+      - name: order_status
+        description: "Current order status."
+
+      - name: total_items
+        description: "Total number of items in the order."
+
+      - name: product_revenue
+        description: "Total product revenue for the order."
+
+      - name: freight_value
+        description: "Total freight value for the order."
+
+      - name: total_order_value
+        description: "Product revenue plus freight value."
+
+      - name: total_payment_value
+        description: "Total payment value associated with the order."
+
+      - name: payment_count
+        description: "Number of payment records associated with the order."
+
+      - name: average_review_score
+        description: "Average customer review score."
+
+      - name: review_count
+        description: "Number of reviews associated with the order."
+
+
+  # ==========================================
+  # DELIVERY PERFORMANCE
+  # ==========================================
+
+  - name: int_delivery_performance
+
+    description: >
+      Calculates order delivery performance including delivery days,
+      difference from estimated delivery date, and delivery status.
+
+    columns:
+
+      - name: order_id
+        description: "Unique identifier for the order."
+        tests:
+          - not_null
+          - unique
+
+      - name: customer_id
+        description: "Customer who placed the order."
+        tests:
+          - not_null
+
+      - name: delivery_days
+        description: "Number of days from order purchase to customer delivery."
+
+      - name: delivery_vs_estimate_days
+        description: >
+          Difference between estimated delivery date and actual
+          delivery date. Negative values indicate late delivery.
+
+      - name: delivery_status
+        description: "Delivery performance classification."
+        tests:
+          - accepted_values:
+              values:
+                - On Time
+                - Late
+                - Not Delivered
+
+
+  # ==========================================
+  # CUSTOMER ORDERS
+  # ==========================================
+
+  - name: int_customer_orders
+
+    description: >
+      Customer-level aggregation containing order count,
+      total spending, average order value, and customer order dates.
+
+    columns:
+
+      - name: customer_id
+        description: "Unique identifier for the customer."
+        tests:
+          - not_null
+          - unique
+          - relationships:
+              to: ref('stg_customers')
+              field: customer_id
+
+      - name: total_orders
+        description: "Total number of orders placed by the customer."
+
+      - name: total_spend
+        description: "Total amount spent by the customer."
+
+      - name: average_order_value
+        description: "Average value of the customer's orders."
+
+      - name: first_order_date
+        description: "Date of the customer's first order."
+
+      - name: last_order_date
+        description: "Date of the customer's most recent order."

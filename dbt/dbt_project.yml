@@ -1,0 +1,21 @@
+name: 'olis_dataset_project'
+version: '1.0.0'
+config-version: 2
+
+profile: 'olis_dataset_project'
+
+model-paths: ["models"]
+test-paths: ["tests"]
+macro-paths: ["macros"]
+
+models:
+  olis_dataset_project:
+
+    staging:
+      +schema: silver
+
+    intermediate:
+      +schema: silver
+
+    marts:
+      +schema: gold
